@@ -16,9 +16,35 @@ client = influxdb_client.InfluxDBClient(
 
 query_api = client.query_api()
 
+
+sensorQuery = 'from(bucket: "' + bucket +'")\
+    |> range(start:-2d)\
+    |> filter(fn: (r) => r["_field"] == "value")\
+    |> distinct(column: "entity_id")\
+    |> group(columns: ["entity_id"], mode:"by")'
+
+sensorResult = query_api.query(org=org, query=sensorQuery)
+
+sensorResults = []
+for table in sensorResult:
+  for record in table.records:
+    sensorResults.append(
+        record.values.get("entity_id")
+    )
+
+i = 0
+for s in sensorResults :
+   print(str(i) + " => " + str(s))
+   i += 1
+
+entity = int(input("Capteur : "))
+
+sensor = sensorResults[entity]
+print(sensor)
+
 query = 'from(bucket: "' + bucket +'")\
- |> range(start:-7d)\
- |> filter(fn: (r) => r["entity_id"] == "d251_1_co2_air_temperature")\
+ |> range(start:-2d)\
+ |> filter(fn: (r) => r["entity_id"] == "' + sensor + '")\
  |> filter(fn: (r) => r["_field"] == "value")\
  |> filter(fn: (r) => r["_measurement"] == "°C")'
 

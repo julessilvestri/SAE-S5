@@ -14,7 +14,7 @@ class RoomController:
     def getRoomList(self):
         return [Room(room_label) for room_label in self.rooms]
 
-    def getRoomById(self, room_label):
+    def getRoomByName(self, room_label):
         for room in self.rooms:
             if room:
                 return Room(room)

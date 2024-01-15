@@ -53,7 +53,7 @@ class SensorController :
 
 
 
-    def getNameSensorsByName(self, name):
+    def getSensorsByName(self, name):
         try:
             client = influxdb_client.InfluxDBClient(
                 self.url,
@@ -78,11 +78,11 @@ class SensorController :
             try:
                 result = query_api.query(org=self.org, query=query)
 
-                print("result : ", result.records)
+                print("result : ", result)
 
                 data = []
                 for table in result:
-                    for record in table.records:
+                    for record in table:
                         data.append(
                             record.values.get("_measurement")
                         )

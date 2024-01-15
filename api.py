@@ -63,7 +63,7 @@ def getRoomById(name):
     """
 
     try:
-        room = RoomController().getById(name)
+        room = RoomController().getRoomByName(name)
         if room :
             data = {"label": room.label}
         else :
@@ -101,7 +101,7 @@ def getSensorsList():
 
 
 @app.route("/sensors/<string:name>", methods=["GET"])
-def getNameSensorsByName(name):
+def getSensorsByName(name):
 
     """
     Get sensor by name.
@@ -123,11 +123,11 @@ def getNameSensorsByName(name):
     """
 
     try:
-        sensor = SensorController().getNameSensorsByName(name)
+        sensor = SensorController().getSensorsByName(name)
         if sensor :
             data = {"label": sensor}
         else :
-            data = {"error": "Room not found"}, 404
+            data = {"error": "Sensor not found"}, 404
         return jsonify(data)
     except Exception as e:
             return f"Erreur interne du serveur : {str(e)}", 500

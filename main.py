@@ -32,6 +32,11 @@ try:
         org=org
     )
 
+    if client.health().status == 'pass':
+        print("Connexion à la base de données réussie")
+    else:
+        print("Échec de la connexion à la base de données")
+
     query_api = client.query_api()
 
     sensors = [
@@ -72,41 +77,48 @@ try:
         print("Erreur requête flux")
         
 
-    print ('')
-    measurement = int(input("Mesure : "))
-    print ('')
+#     print ('')
+#     measurement = int(input("Mesure : "))
+#     print ('')
 
-    query = 'from(bucket: "' + bucket +'")\
-    |> range(start:-2d)\
-    |> filter(fn: (r) => r["entity_id"] =~ /^' + sensors[entity] + '/)\
-    |> filter(fn: (r) => r["_field"] == "value")\
-    |> filter(fn: (r) => r["_measurement"] == "' + measurementResults[measurement] +'")'
+#     query = 'from(bucket: "' + bucket +'")\
+#     |> range(start:-2d)\
+#     |> filter(fn: (r) => r["entity_id"] =~ /^' + sensors[entity] + '/)\
+#     |> filter(fn: (r) => r["_field"] == "value")\
+#     |> filter(fn: (r) => r["_measurement"] == "' + measurementResults[measurement] +'")'
 
-    try:
-        result = query_api.query(org=org, query=query)
+#     try:
+#         result = query_api.query(org=org, query=query)
 
-        results = []
-        for table in result:
-            for record in table.records:                
-                results.append((
-                    record.get_field(), 
-                    record.get_value(), 
-                    record.get_measurement(),
-                    record.get_time(),
-                    getStatusComfort(record.get_value(), record.get_measurement())
-                ))
+#         results = []
+#         for table in result:
+#             for record in table.records:                
+#                 results.append((
+#                     record.get_field(), 
+#                     record.get_value(), 
+#                     record.get_measurement(),
+#                     record.get_time(),
+#                     getStatusComfort(record.get_value(), record.get_measurement())
+#                 ))
 
-        csv_file_path = 'exported_data.csv'
+#         csv_file_path = 'exported_data.csv'
 
-        with open(csv_file_path, mode='w', newline='') as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(['_field', '_value', '_measurement', '_time', '_state'])
-            csv_writer.writerows(results)
+#         with open(csv_file_path, mode='w', newline='') as csv_file:
+#             csv_writer = csv.writer(csv_file)
+#             csv_writer.writerow(['_field', '_value', '_measurement', '_time', '_state'])
+#             csv_writer.writerows(results)
 
-        print(f'Data exported to {csv_file_path}')
-    except:
-        print("Erreur requête flux")
+#         print(f'Data exported to {csv_file_path}')
+#     except:
+#         print("Erreur requête flux")
 except:
     print("Erreur connexion à InfluxDB")
+
+
+
+
+
+
+
 
 

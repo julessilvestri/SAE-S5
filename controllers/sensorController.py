@@ -12,8 +12,6 @@ class SensorController(ConnectionController):
         
     def getList(self):
         try:
-            query_api = self.client.query_api()
-
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start:-30d)\
                 |> filter(fn: (r) => r["_field"] == "value")\
@@ -22,7 +20,7 @@ class SensorController(ConnectionController):
                 |> yield(name: "mean")'
 
             try:
-                sensors = query_api.query_data_frame(org=self.org, query=query)
+                sensors = self.query_api.query_data_frame(org=self.org, query=query)
 
                 data = []
 
@@ -39,8 +37,6 @@ class SensorController(ConnectionController):
 
     def getByName(self, name):
             try:
-                query_api = self.client.query_api()
-
                 query = 'from(bucket: "' + self.bucket +'")\
                     |> range(start:-30d)\
                     |> filter(fn: (r) => r["_field"] == "value")\
@@ -49,7 +45,7 @@ class SensorController(ConnectionController):
                     |> yield(name: "mean")'
 
                 try:
-                    sensors = query_api.query_data_frame(org=self.org, query=query)
+                    sensors = self.query_api.query_data_frame(org=self.org, query=query)
 
                     data = []
 
@@ -66,8 +62,6 @@ class SensorController(ConnectionController):
 
     def getListByRoom(self, room):
             try:
-                query_api = self.client.query_api()
-
                 query = 'from(bucket: "' + self.bucket +'")\
                     |> range(start:-30d)\
                     |> filter(fn: (r) => r["_field"] == "value")\
@@ -76,7 +70,7 @@ class SensorController(ConnectionController):
                     |> yield(name: "mean")'
 
                 try:
-                    sensors = query_api.query_data_frame(org=self.org, query=query)
+                    sensors = self.query_api.query_data_frame(org=self.org, query=query)
 
                     data = []
 

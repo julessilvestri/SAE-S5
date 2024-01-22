@@ -18,5 +18,8 @@ class ConnectionController:
 
             if self.client.health().status != 'pass':
                 raise Exception()
+
+            self.query_api = self.client.query_api()
+
         except Exception as e:
            return f"Erreur connexion à influxDB : {e}"

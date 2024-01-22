@@ -15,28 +15,6 @@ CORS(app)
 if __name__ == "__main__":
     app.run(debug=True)
 
-
-
-
-# @app.route("/rooms", methods=["GET"])
-# def getRoomList():
-#     try:
-#         room_controller = RoomController()
-#         room_data = room_controller.getAll()
-#         if room_data:
-#             return jsonify(room_data)
-#         else:
-#             return jsonify({"error": "Rooms not found"}), 404
-#     except Exception as e:
-#         logging.error(f"Internal server error: {str(e)}")
-#         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
-
-
-
-
-
-
-
 @app.route("/rooms", methods=["GET"])
 def getRoomList():
 
@@ -61,38 +39,6 @@ def getRoomList():
             data = [{"name": room.name, "locate": room.locate} for room in rooms]
         else :
             data = {"error": "Rooms not found"}, 404
-        return jsonify(data)
-    except Exception as e:
-            return f"Erreur interne du serveur : {str(e)}", 500
-
-@app.route("/rooms/<string:name>", methods=["GET"])
-def getRoomByName(name):
-
-    """
-    Get room by name.
-
-    ---
-    tags:
-      - GET
-    parameters:
-      - name: name
-        in: path
-        type: string
-        required: true
-        description: Name of the room
-    responses:
-      200:
-        description: Information for room
-      500:
-        description: Internal server error
-    """
-
-    try:
-        room = RoomController().getByName(name)
-        if room :
-            data = [{"name": room.name, "locate": room.locate}]
-        else :
-            data = {"error": "Room not found"}, 404
         return jsonify(data)
     except Exception as e:
             return f"Erreur interne du serveur : {str(e)}", 500

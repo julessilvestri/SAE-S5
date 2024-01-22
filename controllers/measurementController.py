@@ -9,24 +9,23 @@ from controllers.connectionController import ConnectionController
 from models.measurement import Measurement
 
 class MeasurementController(ConnectionController):
-
+    
     def getList(self):
         try:
-            query_api = self.client.query_api()
-
             query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start:-30d)\
+                |> range(start: -30d)\
                 |> filter(fn: (r) => r["_field"] == "value")\
+                |> group()\
                 |> distinct(column: "_measurement")\
-                |> yield(name: "mean")'
+                |> keep(columns: ["_value"])'
 
             try:
-                measurements = query_api.query_data_frame(org=self.org, query=query)
+                measurements = self.query_api.query_data_frame(org=self.org, query=query)
 
-                data = []
+                data = []                
 
-                for measurement_name in measurements['_measurement']:
-                    item = Measurement(measurement_name)
+                for measurement in measurements["_value"]:
+                    item = Measurement(measurement)
                     data.append(item)
 
                 return data

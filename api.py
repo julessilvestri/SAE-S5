@@ -1,7 +1,8 @@
 # Import library
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, Response
 from flasgger import Swagger
 from flask_cors import CORS
+import json
 
 # Import controllers
 from controllers.roomController import RoomController
@@ -11,9 +12,6 @@ from controllers.measurementController import MeasurementController
 app = Flask(__name__)
 swagger = Swagger(app)
 CORS(app)
-
-if __name__ == "__main__":
-    app.run(debug=True)
 
 @app.route("/rooms", methods=["GET"])
 def getRoomList():
@@ -160,3 +158,46 @@ def getListMeasurements():
             return make_response(jsonify({"error": "Measurements not found"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500)
+    
+
+
+
+
+@app.route("/rooms/<string:room>/state", methods=["GET"])
+def getRoomState(room):
+
+    """
+    Get state of room.
+
+    ---
+    tags:
+      - GET
+    parameters:
+      - name: room
+        in: path
+        type: string
+        required: true
+        description: Name of the room
+    responses:
+      200:
+        description: Room informations
+      500:
+        description: Internal server error
+    """
+
+    try:
+      roomState = RoomController().getState(room)
+      if roomState:
+          data = json.dumps(roomState, ensure_ascii=False)
+          response = Response(data, content_type='application/json; charset=utf-8')
+          return response
+      else:
+          return make_response(jsonify({"error": "Measurements not found"}), 200)
+    except Exception as e:
+      return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500, {"Content-Type": "application/json; charset=utf-8"})
+    
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+

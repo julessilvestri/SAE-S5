@@ -1,11 +1,12 @@
 # Import library
-from flask import Flask, jsonify
+from flask import Flask, jsonify, make_response
 from flasgger import Swagger
 from flask_cors import CORS
 
 # Import controllers
 from controllers.roomController import RoomController
 from controllers.sensorController import SensorController
+from controllers.measurementController import MeasurementController
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -18,7 +19,7 @@ if __name__ == "__main__":
 def getRoomList():
 
     """
-    Get room list.
+    Get all rooms.
 
     ---
     tags:
@@ -31,9 +32,9 @@ def getRoomList():
     """
 
     try:
-        rooms = RoomController().getRoomList()
+        rooms = RoomController().getAll()
         if rooms :
-            data = [{"label": room.label} for room in rooms]
+            data = [{"name": room.name, "locate": room.locate} for room in rooms]
         else :
             data = {"error": "Rooms not found"}, 404
         return jsonify(data)
@@ -41,7 +42,7 @@ def getRoomList():
             return f"Erreur interne du serveur : {str(e)}", 500
 
 @app.route("/rooms/<string:name>", methods=["GET"])
-def getRoomById(name):
+def getRoomByName(name):
 
     """
     Get room by name.
@@ -54,7 +55,7 @@ def getRoomById(name):
         in: path
         type: string
         required: true
-        description: ID of the room
+        description: Name of the room
     responses:
       200:
         description: Information for room
@@ -63,42 +64,40 @@ def getRoomById(name):
     """
 
     try:
-        room = RoomController().getRoomByName(name)
+        room = RoomController().getByName(name)
         if room :
-            data = {"label": room.label}
+            data = [{"name": room.name, "locate": room.locate}]
         else :
             data = {"error": "Room not found"}, 404
         return jsonify(data)
     except Exception as e:
             return f"Erreur interne du serveur : {str(e)}", 500
-    
+
 @app.route("/sensors", methods=["GET"])
 def getSensorsList():
 
     """
-    Get sensors list.
+    Get all sensors.
 
     ---
     tags:
       - GET
     responses:
       200:
-        description: Information for room
+        description: Information for all sensors
       500:
         description: Internal server error
     """
 
     try:
-        sensors = SensorController().getSensorsList()
+        sensors = SensorController().getList()
         if sensors :
-            data = [{"label": sensor.label} for sensor in sensors]
+            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors]
         else :
             data = {"error": "Sensors not found"}, 404
         return jsonify(data)
     except Exception as e:
             return f"Erreur interne du serveur : {str(e)}", 500
-    
-
 
 @app.route("/sensors/<string:name>", methods=["GET"])
 def getSensorsByName(name):
@@ -114,30 +113,29 @@ def getSensorsByName(name):
         in: path
         type: string
         required: true
-        description: ID of the room
+        description: Name of the sensor
     responses:
       200:
-        description: Information for room
+        description: Information for sensor
       500:
         description: Internal server error
     """
 
     try:
-        sensor = SensorController().getSensorsByName(name)
-        if sensor :
-            data = {"label": sensor}
+        sensors = SensorController().getByName(name)
+        if sensors :
+            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors]
         else :
             data = {"error": "Sensor not found"}, 404
         return jsonify(data)
     except Exception as e:
             return f"Erreur interne du serveur : {str(e)}", 500
-    
 
-@app.route("/room/<string:room>/sensors", methods=["GET"])
+@app.route("/rooms/<string:room>/sensors", methods=["GET"])
 def getListSensorByRoom(room):
 
     """
-    Get sensors list by room.
+    Get all sensors by room.
 
     ---
     tags:
@@ -147,7 +145,7 @@ def getListSensorByRoom(room):
         in: path
         type: string
         required: true
-        description: ID of the room
+        description: Name of the room
     responses:
       200:
         description: Information for room
@@ -156,19 +154,37 @@ def getListSensorByRoom(room):
     """
 
     try:
-        sensors = SensorController().getListSensorByRoom(room)
+        sensors = SensorController().getListByRoom(room)
         if sensors :
-            data = [{"label": sensor} for sensor in sensors]
+            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors]
         else :
             data = {"error": "Sensors not found"}, 404
         return jsonify(data)
     except Exception as e:
             return f"Erreur interne du serveur : {str(e)}", 500
-     
-                
-# un capteur par id
-# tous les types capteurs (température, humidity, co2 etc...)
-# tous les types capteurs par salle
 
-# mesures
-    
+@app.route("/measurements", methods=["GET"])
+def getListMeasurements():
+
+    """
+    Get all measurements.
+
+    ---
+    tags:
+      - GET
+    responses:
+      200:
+        description: Information for measurements
+      500:
+        description: Internal server error
+    """
+
+    try:
+        measurements = MeasurementController().getList()
+        if measurements:
+            data = [{"measurement": measurement} for measurement in measurements]
+            return jsonify(data), 200
+        else:
+            return make_response(jsonify({"error": "Measurements not found"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500)

@@ -4,19 +4,16 @@ from models.room import Room
 class RoomController:
     def __init__(self):
         self.rooms = [
-            "d251_1",
-            "d351_1",
-            "d351_2",
-            "d351_3",
-            "d360_1"
+            {'name': "d251", 'locate': "IUT"},
+            {'name': "d351", 'locate': "IUT"},
+            {'name': "d360", 'locate': "IUT"}
         ]
 
-    def getRoomList(self):
-        return [Room(room_label) for room_label in self.rooms]
+    def getAll(self):
+        return [Room(room['name'], room['locate']) for room in self.rooms]
 
-    def getRoomByName(self, room_label):
+    def getByName(self, roomName):
         for room in self.rooms:
-            if room:
-                return Room(room)
-            else:
-                return None
+            if room['name'] == roomName:
+                return Room(room['name'], room['locate'])
+        return None

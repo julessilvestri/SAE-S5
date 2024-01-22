@@ -40,7 +40,6 @@ class RoomController(ConnectionController):
         except:
             print("Error connecting to InfluxDB")
 
-    import json
 
     def getState(self, room):
         try:
@@ -63,7 +62,6 @@ class RoomController(ConnectionController):
                 data.append({'measurement': average_data['_measurement'][i], 'value': average_data['_value'][i]})
 
             return data
-
         except:
             print("Error connecting to InfluxDB")
                 

@@ -192,7 +192,7 @@ def getRoomState(room):
           response = Response(data, content_type='application/json; charset=utf-8')
           return response
       else:
-          return make_response(jsonify({"error": "Measurements not found"}), 200)
+          return make_response(jsonify({"error": "Measurements not found"}), 404)
     except Exception as e:
       return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500, {"Content-Type": "application/json; charset=utf-8"})
     

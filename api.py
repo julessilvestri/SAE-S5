@@ -15,6 +15,28 @@ CORS(app)
 if __name__ == "__main__":
     app.run(debug=True)
 
+
+
+
+# @app.route("/rooms", methods=["GET"])
+# def getRoomList():
+#     try:
+#         room_controller = RoomController()
+#         room_data = room_controller.getAll()
+#         if room_data:
+#             return jsonify(room_data)
+#         else:
+#             return jsonify({"error": "Rooms not found"}), 404
+#     except Exception as e:
+#         logging.error(f"Internal server error: {str(e)}")
+#         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+
+
+
+
+
+
 @app.route("/rooms", methods=["GET"])
 def getRoomList():
 
@@ -33,6 +55,8 @@ def getRoomList():
 
     try:
         rooms = RoomController().getAll()
+        print("Rooms : ")
+        print(rooms)
         if rooms :
             data = [{"name": room.name, "locate": room.locate} for room in rooms]
         else :
@@ -91,13 +115,15 @@ def getSensorsList():
 
     try:
         sensors = SensorController().getList()
-        if sensors :
+        if sensors:
             data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors]
-        else :
-            data = {"error": "Sensors not found"}, 404
-        return jsonify(data)
+        else:
+            data = {"error": "Sensors not found"}
+
+        return jsonify(data), 200  # Set the status code explicitly to 200 for success
     except Exception as e:
-            return f"Erreur interne du serveur : {str(e)}", 500
+        error_message = f"Erreur interne du serveur : {str(e)}"
+        return make_response(jsonify({"error": error_message}), 500)
 
 @app.route("/sensors/<string:name>", methods=["GET"])
 def getSensorsByName(name):
@@ -156,7 +182,7 @@ def getListSensorByRoom(room):
     try:
         sensors = SensorController().getListByRoom(room)
         if sensors :
-            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors]
+            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors], 200
         else :
             data = {"error": "Sensors not found"}, 404
         return jsonify(data)
@@ -182,7 +208,7 @@ def getListMeasurements():
     try:
         measurements = MeasurementController().getList()
         if measurements:
-            data = [{"measurement": measurement} for measurement in measurements]
+            data = [{"measurement": measurement.name} for measurement in measurements]
             return jsonify(data), 200
         else:
             return make_response(jsonify({"error": "Measurements not found"}), 200)

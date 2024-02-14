@@ -126,7 +126,7 @@ def getListSensorByRoom(room):
     try:
         sensors = SensorController().getListByRoom(room)
         if sensors :
-            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors], 200
+            data = [{"name": sensor.name, "measurements": sensor.measurements, "room": sensor.room} for sensor in sensors]
         else :
             data = {"error": "Sensors not found"}, 404
         return jsonify(data)

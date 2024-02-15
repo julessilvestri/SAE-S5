@@ -8,6 +8,7 @@ import json
 from controllers.roomController import RoomController
 from controllers.sensorController import SensorController
 from controllers.measurementController import MeasurementController
+from controllers.measureController import MeasureController
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -186,7 +187,14 @@ def getRoomState(room):
     """
 
     try:
-      roomState = RoomController().getState(room)
+      measures = MeasureController().getState(room)
+
+      if measures:
+        data = [{"measurment": measure.measurment, "value" : measure.value} for measure in measures]
+        return jsonify(data), 200
+      else:
+        return make_response(jsonify({"error": "Measurements not found"}), 200)
+      
       if roomState:
           data = json.dumps(roomState, ensure_ascii=False)
           response = Response(data, content_type='application/json; charset=utf-8')

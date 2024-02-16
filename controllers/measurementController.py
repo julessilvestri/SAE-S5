@@ -1,3 +1,7 @@
+# -----=====|  |=====-----
+# Create by Jules - 12/2023
+# -----=====|  |=====-----
+
 # Import library
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -11,6 +15,20 @@ from models.measurement import Measurement
 class MeasurementController(ConnectionController):
     
     def getList(self):
+        """
+            Récupère une liste de mesures distinctes depuis InfluxDB pour le seau spécifié dans les 30 derniers jours.
+
+            Args:
+                self (objet): Instance de la classe.
+                
+            Returns:
+                list: Une liste d'objets Measurement représentant des mesures distinctes.
+                
+            Raises:
+                RuntimeError: S'il y a une erreur lors de la requête de données depuis InfluxDB.
+                Exception: S'il y a une erreur inattendue pendant l'exécution.
+        """
+        
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -30d)\

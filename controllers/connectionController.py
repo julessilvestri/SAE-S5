@@ -1,3 +1,7 @@
+# -----=====|  |=====-----
+# Create by Jules - 12/2023
+# -----=====|  |=====-----
+
 # Import library
 import influxdb_client, os
 from dotenv import load_dotenv
@@ -5,6 +9,16 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 class ConnectionController:
     def __init__(self):
+        """
+            Initialise un contrôleur de connexion à la base de données InfluxDB.
+
+            Args:
+                Aucun.
+
+            Raises:
+                RuntimeError: Si une erreur survient lors de la connexion à InfluxDB.
+        """
+        
         try:
             load_dotenv()
 

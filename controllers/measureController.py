@@ -1,3 +1,7 @@
+# -----=====|  |=====-----
+# Create by Jules - 12/2023
+# -----=====|  |=====-----
+
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
 
@@ -18,6 +22,19 @@ class MeasureController(ConnectionController):
     }
 
     def getRoomState(self, room):
+        """
+            Récupère l'état d'une pièce spécifique depuis InfluxDB pour les 48 dernières heures.
+
+            Args:
+                self (object): Instance de la classe.
+                room (str): Nom de la pièce à interroger dans la base de données.
+
+            Returns:
+                list: Une liste d'objets Measure représentant les valeurs moyennes des mesures de la pièce spécifiée.
+
+            Raises:
+                Exception: Si une erreur inattendue se produit lors de la récupération des données.
+        """
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -2d)\
@@ -50,6 +67,21 @@ class MeasureController(ConnectionController):
             print("An unexpected error occurred:", e)
     
     def getMeasure(self, room, sensor):
+        """
+            Récupère la dernière mesure d'un capteur spécifique dans une pièce donnée depuis InfluxDB pour les 48 dernières heures.
+
+            Args:
+                self (object): Instance de la classe.
+                room (str): Nom de la pièce à interroger dans la base de données.
+                sensor (str): Nom du capteur à interroger dans la base de données.
+
+            Returns:
+                Measure: Un objet Measure représentant la dernière mesure du capteur spécifié dans la pièce donnée.
+
+            Raises:
+                Exception: Si une erreur inattendue se produit lors de la récupération des données.
+        """
+        
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -2d)\

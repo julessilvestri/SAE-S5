@@ -1,3 +1,7 @@
+# -----=====|  |=====-----
+# Create by Jules - 12/2023
+# -----=====|  |=====-----
+
 # Import library
 from flask import Flask, jsonify, make_response, Response
 from flasgger import Swagger
@@ -240,7 +244,6 @@ def delete_pycache(root_dir):
         if "__pycache__" in dirs:
             pycache_dir = os.path.join(root, "__pycache__")
             shutil.rmtree(pycache_dir)
-            print(f"Deleted {pycache_dir}")
             dirs.remove("__pycache__")
 
 if __name__ == "__main__":

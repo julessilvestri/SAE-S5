@@ -1,3 +1,7 @@
+# -----=====|  |=====-----
+# Create by Jules - 12/2023
+# -----=====|  |=====-----
+
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
 
@@ -11,6 +15,19 @@ from models.measure import Measure
 class RoomController(ConnectionController):
         
     def getAll(self):
+        """
+            Récupère la liste de toutes les pièces enregistrées dans la base de données InfluxDB au cours des 30 derniers jours.
+
+            Args:
+                self (object): Instance de la classe.
+
+            Returns:
+                list: Une liste d'objets Room représentant toutes les pièces enregistrées dans la base de données.
+
+            Raises:
+                RuntimeError: Si une erreur se produit lors de la requête de données depuis InfluxDB.
+        """
+        
         try:
             query = 'from(bucket: "' + self.bucket +'")\
             |> range(start:-30d)\

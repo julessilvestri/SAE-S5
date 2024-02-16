@@ -2,7 +2,7 @@
 from flask import Flask, jsonify, make_response, Response
 from flasgger import Swagger
 from flask_cors import CORS
-import json
+import json, os, shutil
 
 # Import controllers
 from controllers.roomController import RoomController
@@ -233,9 +233,17 @@ def getMeasure(room, sensor):
     
     except Exception as e:
       return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500, {"Content-Type": "application/json; charset=utf-8"})
-    
+
+
+def delete_pycache(root_dir):
+    for root, dirs, files in os.walk(root_dir):
+        if "__pycache__" in dirs:
+            pycache_dir = os.path.join(root, "__pycache__")
+            shutil.rmtree(pycache_dir)
+            print(f"Deleted {pycache_dir}")
+            dirs.remove("__pycache__")
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-
+    delete_pycache(os.getcwd())
+    app.run(host='0.0.0.0', port=5000, debug=False)
 

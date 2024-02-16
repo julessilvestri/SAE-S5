@@ -1,14 +1,17 @@
 # Import library
-import influxdb_client
+import influxdb_client, os
+from dotenv import load_dotenv
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 class ConnectionController:
     def __init__(self):
         try:
-            self.bucket = "IUT_BUCKET"
-            self.org = "INFO"
-            self.token = "q4jqYhdgRHuhGwldILZ2Ek1WzGPhyctQ3UgvOII-bcjEkxqqrIIacgePte33CEjekqsymMqWlXnO0ndRhLx19g=="
-            self.url = "http://51.83.36.122:8086/"
+            load_dotenv()
+
+            self.bucket = os.getenv("INFLUX_BUCKET")
+            self.org = os.getenv("INFLUX_ORG")
+            self.token = os.getenv("INFLUX_TOKEN")
+            self.url = os.getenv("INFLUX_URL")
 
             self.client = influxdb_client.InfluxDBClient(
                 self.url,

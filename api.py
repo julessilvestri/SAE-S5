@@ -41,7 +41,7 @@ def getRooms():
     rooms = RoomController().getRooms()
     if rooms:
       return jsonify([{"name": room.name, "locate": room.locate} for room in rooms])
-    NotFoundException() 
+    return NotFoundException() 
   except Exception as e:
     return InternalServerError(e)
 
@@ -65,9 +65,9 @@ def getSensors():
     sensors = SensorController().getSensors()
     if sensors:
       return jsonify([{"name": sensor.name, "measurement": sensor.measurement, "room": sensor.room} for sensor in sensors])
-    NotFoundException()
+    return NotFoundException()
   except Exception as e:
-    InternalServerError(e)
+    return InternalServerError(e)
 
 @app.route("/sensors/<string:name>", methods=["GET"])
 def getSensor(name):
@@ -95,9 +95,9 @@ def getSensor(name):
     sensors = SensorController().getSensor(name)
     if sensors :
       return jsonify([{"name": sensor.name, "measurement": sensor.measurement, "room": sensor.room} for sensor in sensors])
-    NotFoundException()
+    return NotFoundException()
   except Exception as e:
-    InternalServerError(e)
+    return InternalServerError(e)
 
 @app.route("/rooms/<string:room>/sensors", methods=["GET"])
 def getSensorsByRoom(room):
@@ -123,11 +123,12 @@ def getSensorsByRoom(room):
 
   try:
     sensors = SensorController().getSensorsByRoom(room)
+    
     if sensors :
       return jsonify([{"name": sensor.name, "measurement": sensor.measurement, "room": sensor.room} for sensor in sensors])
-    NotFoundException()
+    return NotFoundException()
   except Exception as e:
-    InternalServerError(e)
+    return InternalServerError(e)
 
 @app.route("/measurements", methods=["GET"])
 def getListMeasurements():
@@ -149,9 +150,9 @@ def getListMeasurements():
     measurements = MeasurementController().getMeasurements()
     if measurements:
         return jsonify([{"measurement": measurement.name} for measurement in measurements])
-    NotFoundException()
+    return NotFoundException()
   except Exception as e:
-    InternalServerError(e)
+    return InternalServerError(e)
 
 @app.route("/rooms/<string:room>/state", methods=["GET"])
 def getMeasuresByRoomName(room):
@@ -179,9 +180,9 @@ def getMeasuresByRoomName(room):
     measures = MeasureController().getMeasuresByRoomName(room)
     if measures:
       return jsonify([{"measurement": measure.measurement, "value" : measure.value, "recommendation" : measure.recommendation} for measure in measures])
-    NotFoundException()
+    return NotFoundException()
   except Exception as e:
-    InternalServerError(e)
+    return InternalServerError(e)
 
 @app.route("/rooms/<string:room>/state/<string:measurement>", methods=["GET"])
 def getMeasuresByRoomAndMeasurement(room, measurement):
@@ -214,11 +215,69 @@ def getMeasuresByRoomAndMeasurement(room, measurement):
     measure = MeasureController().getMeasuresByRoomAndMeasurement(room, measurement)
     if measure :
       return jsonify({"measurement": measure.measurement, "value" : measure.value, "recommendation" : measure.recommendation})
-    NotFoundException()    
+    return NotFoundException()    
   except Exception as e:
-    InternalServerError(e)
+    return InternalServerError(e)
+
+@app.route("/rooms/sensors", methods=["GET"])
+def getRoomsSensorsList():
+
+  """
+    Retrieve a list of sensors grouped by rooms.
+
+    This endpoint fetches a list of sensors grouped by rooms along with their respective measurements and recommendations.
+
+    ---
+    tags:
+      - GET
+    responses:
+      200:
+        description: List of rooms with associated sensor data
+      404:
+        description: No rooms found
+      500:
+        description: Internal server error
+  """
+
+  try:
+      rooms = RoomController().getRooms()
+      if not rooms:
+          return jsonify({"error": "Rooms not found"}), 404
+
+      rooms_sensors = []
+      for room in rooms:
+          sensors_data = MeasureController().getMeasuresByRoomName(room.name)
+          sensors_data_dicts = [{
+              "value": sensor.value,
+              "measurement": sensor.measurement
+          } for sensor in sensors_data] if sensors_data else "Sensors data not found"
+
+          room_info = {
+              "name": room.name,
+              "locate": room.locate,
+              "sensors": sensors_data_dicts
+          }
+          rooms_sensors.append(room_info)
+
+      return jsonify(rooms_sensors), 200
+  except Exception as e:
+      return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 def delete_pycache(root_dir):
+
+  """
+    Delete all __pycache__ directories within the specified root directory.
+
+    This function recursively walks through the directory tree starting from the root directory.
+    If a __pycache__ directory is found within any directory, it is deleted along with its contents.
+
+    Parameters:
+        root_dir (str): The root directory from which to start searching for __pycache__ directories.
+
+    Returns:
+        None
+  """
+
   for root, dirs, files in os.walk(root_dir):
     if "__pycache__" in dirs:
       pycache_dir = os.path.join(root, "__pycache__")

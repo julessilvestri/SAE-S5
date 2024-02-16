@@ -4,4 +4,4 @@ def NotFoundException() :
     return jsonify({"error": "Not found"}), 404
 
 def InternalServerError(e) :
-    return jsonify({"error": "Internal server error" + e}), 500
+    return jsonify({"error": f"Internal server error{e}"}), 500

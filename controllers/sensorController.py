@@ -90,22 +90,20 @@ class SensorController(ConnectionController):
         except:
             print("Erreur connexion à InfluxDB")
 
-
     def getSensorsByRoom(self, room):
         """
-            Récupère une liste de capteurs enregistrés dans la base de données InfluxDB pour une pièce spécifique.
+        Récupère une liste de capteurs enregistrés dans la base de données InfluxDB pour une pièce spécifique.
 
-            Args:
-                self (object): Instance de la classe.
-                room (str): Nom de la pièce pour laquelle récupérer les capteurs.
+        Args:
+            self (object): Instance de la classe.
+            room (str): Nom de la pièce pour laquelle récupérer les capteurs.
 
-            Returns:
-                list: Une liste d'objets Sensor représentant les capteurs enregistrés dans la pièce spécifiée.
+        Returns:
+            list: Une liste d'objets Sensor représentant les capteurs enregistrés dans la pièce spécifiée.
 
-            Raises:
-                RuntimeError: Si une erreur se produit lors de la requête de données depuis InfluxDB.
+        Raises:
+            RuntimeError: Si une erreur se produit lors de la requête de données depuis InfluxDB.
         """
-        
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start:-30d)\
@@ -120,11 +118,14 @@ class SensorController(ConnectionController):
                 data = []
 
                 for index, sensor in sensors.iterrows():
-                    item = Sensor(sensor['entity_id'], sensor['_measurement'], sensor['entity_id'].split('_')[0])
-                    data.append(item)
+                    if sensor['entity_id'] and sensor['_measurement'] and sensor['entity_id'].split('_')[0]:
+                        data.append(Sensor(sensor['entity_id'], sensor['_measurement'], sensor['entity_id'].split('_')[0]))
 
                 return data
             except Exception as e:
                 print(f"Erreur requête flux : {e}")
-        except:
+                raise RuntimeError("Erreur lors de la requête des capteurs")
+        except Exception as e:
             print("Erreur connexion à InfluxDB")
+            raise RuntimeError("Erreur de connexion à InfluxDB")
+

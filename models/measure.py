@@ -6,7 +6,7 @@ class Measure:
     """
         Représente une mesure avec sa valeur, son type de mesure et sa recommandation associée.
     """
-    def __init__(self, value, measurement, recommendation):
+    def __init__(self, value, measurement, recommendation, time = None):
         """
             Initialise un objet Measure avec les valeurs spécifiées.
 
@@ -24,3 +24,4 @@ class Measure:
         self.value = value
         self.measurement = measurement
         self.recommendation = recommendation
+        self.date = time

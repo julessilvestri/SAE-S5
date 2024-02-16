@@ -246,16 +246,17 @@ def getRoomsSensorsList():
 
       rooms_sensors = []
       for room in rooms:
-          sensors_data = MeasureController().getMeasuresByRoomName(room.name)
-          sensors_data_dicts = [{
-              "value": sensor.value,
-              "measurement": sensor.measurement
-          } for sensor in sensors_data] if sensors_data else "Sensors data not found"
+          measures_data = MeasureController().getMeasuresByRoomName(room.name)
+          measures_data_dicts = [{
+              "value": measure.value,
+              "measurement": measure.measurement,
+              "time" : measure.time
+          } for measure in measures_data] if measures_data else "measures data not found"
 
           room_info = {
               "name": room.name,
               "locate": room.locate,
-              "sensors": sensors_data_dicts
+              "measures": measures_data_dicts
           }
           rooms_sensors.append(room_info)
 

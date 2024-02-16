@@ -47,6 +47,8 @@ class MeasureController(ConnectionController):
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
+            print(roomData)
+
             average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
             data = []
 
@@ -54,13 +56,18 @@ class MeasureController(ConnectionController):
 
                 measurement = average_data['_measurement'][i]
                 value = average_data['_value'][i]
+                time = average_data['_time'][i]
+
+                # print("===================")
+                # print(time)
+                # print("===================")
 
                 if measurement in self.RECOMMENDATIONS:
                     recommendation = self.RECOMMENDATIONS[measurement](value)
                 else:
                     recommendation = self.RECOMMENDATIONS["default"]
 
-                data.append(Measure(value, measurement, recommendation))
+                data.append(Measure(value, measurement, recommendation, time))
                 
             return data
         

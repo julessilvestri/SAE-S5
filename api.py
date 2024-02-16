@@ -32,8 +32,6 @@ def getRoomList():
 
     try:
         rooms = RoomController().getAll()
-        print("Rooms : ")
-        print(rooms)
         if rooms :
             data = [{"name": room.name, "locate": room.locate} for room in rooms]
         else :
@@ -187,20 +185,52 @@ def getRoomState(room):
     """
 
     try:
-      measures = MeasureController().getState(room)
+      measures = MeasureController().getRoomState(room)
 
       if measures:
-        data = [{"measurment": measure.measurment, "value" : measure.value} for measure in measures]
+        data = [{"measurment": measure.measurment, "value" : measure.value, "recommendation" : measure.recommendation} for measure in measures]
         return jsonify(data), 200
       else:
         return make_response(jsonify({"error": "Measurements not found"}), 200)
-      
-      if roomState:
-          data = json.dumps(roomState, ensure_ascii=False)
-          response = Response(data, content_type='application/json; charset=utf-8')
-          return response
-      else:
-          return make_response(jsonify({"error": "Measurements not found"}), 404)
+    except Exception as e:
+      return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500, {"Content-Type": "application/json; charset=utf-8"})
+
+
+
+@app.route("/rooms/<string:room>/state/<string:sensor>", methods=["GET"])
+def getMeasure(room, sensor):
+
+    """
+    Get measure of one sensor in room.
+
+    ---
+    tags:
+      - GET
+    parameters:
+      - name: room
+        in: path
+        type: string
+        required: true
+        description: Name of the room
+      - name: sensor
+        in: path
+        type: string
+        required: true
+        description: Name of the sensor
+    responses:
+      200:
+        description: Room informations
+      500:
+        description: Internal server error
+    """
+
+    try:
+      measure = MeasureController().getMeasure(room, sensor)
+
+      if measure :
+        return jsonify({"measurment": measure.measurment, "value" : measure.value, "recommendation" : measure.recommendation}), 200
+      return make_response(jsonify({"error": "Measurements not found"}), 200)
+    
     except Exception as e:
       return make_response(jsonify({"error": f"Internal server error: {str(e)}"}), 500, {"Content-Type": "application/json; charset=utf-8"})
     

@@ -18,5 +18,6 @@ class Room:
                 name (str): Nom de la pièce.
                 locate (str): Emplacement de la pièce.
         """
+        
         self.name = name
         self.locate = locate

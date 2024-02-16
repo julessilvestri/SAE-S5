@@ -16,4 +16,5 @@ class Measurement:
             Attributes:
                 name (str): Nom de la mesure.
         """
+        
         self.name = name

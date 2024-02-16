@@ -14,7 +14,7 @@ from models.sensor import Sensor
 
 class SensorController(ConnectionController):
         
-    def getList(self):
+    def getSensors(self):
         """
             Récupère une liste de tous les capteurs enregistrés dans la base de données InfluxDB au cours des 30 derniers jours.
 
@@ -52,7 +52,7 @@ class SensorController(ConnectionController):
             print("Erreur connexion à InfluxDB")
 
 
-    def getByName(self, name):
+    def getSensor(self, name):
         """
             Récupère une liste de capteurs enregistrés dans la base de données InfluxDB qui ont un nom spécifique.
 
@@ -91,7 +91,7 @@ class SensorController(ConnectionController):
             print("Erreur connexion à InfluxDB")
 
 
-    def getListByRoom(self, room):
+    def getSensorsByRoom(self, room):
         """
             Récupère une liste de capteurs enregistrés dans la base de données InfluxDB pour une pièce spécifique.
 
@@ -105,6 +105,7 @@ class SensorController(ConnectionController):
             Raises:
                 RuntimeError: Si une erreur se produit lors de la requête de données depuis InfluxDB.
         """
+        
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start:-30d)\

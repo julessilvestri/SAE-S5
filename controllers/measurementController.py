@@ -14,7 +14,7 @@ from models.measurement import Measurement
 
 class MeasurementController(ConnectionController):
     
-    def getList(self):
+    def getMeasurements(self):
         """
             Récupère une liste de mesures distinctes depuis InfluxDB pour le seau spécifié dans les 30 derniers jours.
 
@@ -28,7 +28,7 @@ class MeasurementController(ConnectionController):
                 RuntimeError: S'il y a une erreur lors de la requête de données depuis InfluxDB.
                 Exception: S'il y a une erreur inattendue pendant l'exécution.
         """
-        
+
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -30d)\

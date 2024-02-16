@@ -21,13 +21,13 @@ class MeasureController(ConnectionController):
         "default": "Aucune message disponible pour ce capteur"
     }
 
-    def getRoomState(self, room):
+    def getMeasuresByRoomName(self, room):
         """
             Récupère l'état d'une pièce spécifique depuis InfluxDB pour les 48 dernières heures.
 
             Args:
                 self (object): Instance de la classe.
-                room (str): Nom de la pièce à interroger dans la base de données.
+                room (str): Nom de la pièce à interroger dans InfluxDB.
 
             Returns:
                 list: Une liste d'objets Measure représentant les valeurs moyennes des mesures de la pièce spécifiée.
@@ -35,6 +35,7 @@ class MeasureController(ConnectionController):
             Raises:
                 Exception: Si une erreur inattendue se produit lors de la récupération des données.
         """
+
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -2d)\
@@ -51,22 +52,22 @@ class MeasureController(ConnectionController):
 
             for i in range(len(average_data['_measurement'])):
 
-                measurment = average_data['_measurement'][i]
+                measurement = average_data['_measurement'][i]
                 value = average_data['_value'][i]
 
-                if measurment in self.RECOMMENDATIONS:
-                    recommendation = self.RECOMMENDATIONS[measurment](value)
+                if measurement in self.RECOMMENDATIONS:
+                    recommendation = self.RECOMMENDATIONS[measurement](value)
                 else:
                     recommendation = self.RECOMMENDATIONS["default"]
 
-                data.append(Measure(value, measurment, recommendation))
+                data.append(Measure(value, measurement, recommendation))
 
             return data
         
         except Exception as e:
             print("An unexpected error occurred:", e)
     
-    def getMeasure(self, room, sensor):
+    def getMeasuresByRoomAndMeasurement(self, room, measurement):
         """
             Récupère la dernière mesure d'un capteur spécifique dans une pièce donnée depuis InfluxDB pour les 48 dernières heures.
 
@@ -81,13 +82,13 @@ class MeasureController(ConnectionController):
             Raises:
                 Exception: Si une erreur inattendue se produit lors de la récupération des données.
         """
-        
+
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -2d)\
                 |> filter(fn: (r) => r["_field"] == "value")\
                 |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
-                |> filter(fn: (r) => r["_measurement"] =~/^' + sensor + '/)\
+                |> filter(fn: (r) => r["_measurement"] =~/^' + measurement + '/)\
                 |> group(columns: ["_measurement", "entity_id"])\
                 |> last(column: "_value")\
                 |> yield(name: "mean")'
@@ -97,15 +98,15 @@ class MeasureController(ConnectionController):
             average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
 
             for i in range(len(average_data['_measurement'])):
-                measurment = average_data['_measurement'][i]
+                measurement = average_data['_measurement'][i]
                 value = average_data['_value'][i]
 
-                if measurment in self.RECOMMENDATIONS:
-                    recommendation = self.RECOMMENDATIONS[measurment](value)
+                if measurement in self.RECOMMENDATIONS:
+                    recommendation = self.RECOMMENDATIONS[measurement](value)
                 else:
                     recommendation = self.RECOMMENDATIONS["default"]
 
-            return Measure(value, measurment, recommendation)
+            return Measure(value, measurement, recommendation)
         
         except Exception as e:
             print("An unexpected error occurred:", e)

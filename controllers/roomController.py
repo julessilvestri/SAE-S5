@@ -14,7 +14,7 @@ from models.measure import Measure
 
 class RoomController(ConnectionController):
         
-    def getAll(self):
+    def getRooms(self):
         """
             Récupère la liste de toutes les pièces enregistrées dans la base de données InfluxDB au cours des 30 derniers jours.
 
@@ -27,7 +27,7 @@ class RoomController(ConnectionController):
             Raises:
                 RuntimeError: Si une erreur se produit lors de la requête de données depuis InfluxDB.
         """
-        
+
         try:
             query = 'from(bucket: "' + self.bucket +'")\
             |> range(start:-30d)\

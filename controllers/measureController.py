@@ -61,7 +61,7 @@ class MeasureController(ConnectionController):
                     recommendation = self.RECOMMENDATIONS["default"]
 
                 data.append(Measure(value, measurement, recommendation))
-
+                
             return data
         
         except Exception as e:

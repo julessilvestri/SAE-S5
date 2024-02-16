@@ -177,9 +177,6 @@ def getMeasuresByRoomName(room):
 
   try:
     measures = MeasureController().getMeasuresByRoomName(room)
-    print("===========================")
-    print(measures)
-    print("===========================")
     if measures:
       return jsonify([{"measurement": measure.measurement, "value" : measure.value, "recommendation" : measure.recommendation} for measure in measures])
     NotFoundException()

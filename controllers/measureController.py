@@ -102,13 +102,14 @@ class MeasureController(ConnectionController):
 
                 measurement = average_data['_measurement'][i]
                 value = average_data['_value'][i]
+                time = roomData.iloc[i]['_time']
 
                 if measurement in self.RECOMMENDATIONS:
                     recommendation = self.RECOMMENDATIONS[measurement](value)
                 else:
                     recommendation = self.RECOMMENDATIONS["default"]
 
-                data.append(Measure(value, measurement, recommendation))
+                data.append(Measure(value, measurement, recommendation, time))
                 
             return data
         

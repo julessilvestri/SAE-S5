@@ -275,12 +275,15 @@ def getRoomsSensorsList():
         return jsonify({"error": "Rooms not found"}), 404
 
     rooms_sensors = []
+
     for room in rooms:
         sensors_data = MeasureController().getMeasuresByRoomName(room.name)
+
         sensors_data_dicts = [{
             "value": sensor.value,
              "measurement": sensor.measurement,
-             "recommendation": sensor.recommendation
+             "recommendation": sensor.recommendation,
+             "date": sensor.date
         } for sensor in sensors_data] if sensors_data else "Sensors data not found"
 
         room_info = {

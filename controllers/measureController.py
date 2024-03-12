@@ -159,7 +159,20 @@ class MeasureController(ConnectionController):
 
             presence_percentage = sum(norm_values.values())
 
-            return f"{round(presence_percentage, 0)}% de chance de présence dans la salle"
+            presence_label = ""
+
+            if presence_percentage < 10 :
+                presence_label = "Il n'y a surement personne dans cette salle"
+            elif presence_percentage < 40 :
+                presence_label = "Peut être que quelqu'un est présent dans cette salle"
+            elif presence_percentage < 70 :
+                presence_label = "Il y a potentiellement quelqu'un dans cette salle"
+            elif presence_percentage > 70 :
+                presence_label = "Quelqu'un est présent dans cette salle"
+            else :
+                presence_label = "Impossible de detecter un présence"
+
+            return {"result" : f"{round(presence_percentage, 0)}% de chance de présence dans la salle", "label": presence_label}
         
         except Exception as e:
             print("An unexpected error occurred:", e)   

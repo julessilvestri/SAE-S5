@@ -211,7 +211,7 @@ def getPresenceByRoomName(room):
   try:
     presence = MeasureController().getRoomPresence(room)
     if presence:
-      return jsonify([{"result": presence}])
+      return jsonify([{"result": presence['result'], "label" : presence['label']}])
     return NotFoundException()
   except Exception as e:
     return InternalServerError(e)

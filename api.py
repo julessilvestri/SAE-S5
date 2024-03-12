@@ -297,8 +297,8 @@ def getRoomsSensorsList():
   except Exception as e:
     return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-@app.route("/ia", methods=["GET"])
-def getIAData():
+@app.route("/ia/<int:year>/<int:month>/<int:day>", methods=["GET"])
+def getIAData(year, month, day):
 
   """
     IA
@@ -306,6 +306,22 @@ def getIAData():
     ---
     tags:
       - GET
+    parameters:
+      - name: year
+        in: path
+        type: integer
+        required: true
+        description: Year
+      - name: month
+        in: path
+        type: integer
+        required: true
+        description: Month
+      - name: day
+        in: path
+        type: integer
+        required: true
+        description: Day
     responses:
       200:
         description: IA Datas
@@ -326,14 +342,17 @@ def getIAData():
   def KelvinToCelsius(temperature):
     return temperature - 273.15
 
+  input_timestamp = int(datetime(year, month, day).timestamp())
+  current_timestamp = int(datetime.now().timestamp())
+
   inputs = np.array([
-      int(datetime.now().timestamp()),
-      int(datetime(2024,2,2).timestamp())
+      current_timestamp,
+      input_timestamp
   ])
 
   inputs = list(map(lambda input: [normalizeInputModel(input)], inputs))
   results = loaded_model.predict(inputs)
-  results = list(map(lambda temperature: KelvinToCelsius(temperature[0]),results))
+  results = list(map(lambda temperature: KelvinToCelsius(temperature[0]), results))
 
   return jsonify(results)
 

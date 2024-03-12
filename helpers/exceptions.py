@@ -1,3 +1,8 @@
+# -----=====|  |=====-----
+# Create by Jules - 12/2023
+# -----=====|  |=====-----
+
+# Import library
 from flask import jsonify
 
 def NotFoundException() :

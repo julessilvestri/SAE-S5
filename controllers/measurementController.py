@@ -3,7 +3,7 @@
 # -----=====|  |=====-----
 
 # Import library
-import influxdb_client
+import os
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Import controllers
@@ -30,12 +30,14 @@ class MeasurementController(ConnectionController):
         """
 
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start: -30d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> group()\
-                |> distinct(column: "_measurement")\
-                |> keep(columns: ["_value"])'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> group()
+                    |> distinct(column: "_measurement")
+                    |> keep(columns: ["_value"])
+                '''
 
             try:
                 measurements = self.query_api.query_data_frame(org=self.org, query=query)

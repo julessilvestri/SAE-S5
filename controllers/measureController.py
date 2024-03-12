@@ -1,4 +1,4 @@
-import influxdb_client
+import os
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Import controllers
@@ -19,13 +19,15 @@ class MeasureController(ConnectionController):
 
     def getRoomState(self, room):
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start: -2d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
-                |> group(columns: ["_measurement", "entity_id"])\
-                |> last(column: "_value")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["entity_id"] =~/^{room}/)
+                    |> group(columns: ["_measurement", "entity_id"])
+                    |> last(column: "_value")
+                    |> yield(name: "mean")
+                '''
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
@@ -51,14 +53,16 @@ class MeasureController(ConnectionController):
     
     def getMeasure(self, room, sensor):
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start: -2d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
-                |> filter(fn: (r) => r["_measurement"] =~/^' + sensor + '/)\
-                |> group(columns: ["_measurement", "entity_id"])\
-                |> last(column: "_value")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["entity_id"] =~/^{room}/)
+                    |> filter(fn: (r) => r["_measurement"] =~/^{sensor}/)
+                    |> group(columns: ["_measurement", "entity_id"])
+                    |> last(column: "_value")
+                    |> yield(name: "mean")
+                '''
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
@@ -79,13 +83,15 @@ class MeasureController(ConnectionController):
 
     def getMeasuresByRoomName(self, room):
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start: -2d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
-                |> group(columns: ["_measurement", "entity_id"])\
-                |> last(column: "_value")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["entity_id"] =~/^{room}/)
+                    |> group(columns: ["_measurement", "entity_id"])
+                    |> last(column: "_value")
+                    |> yield(name: "mean")
+                '''
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
@@ -111,13 +117,15 @@ class MeasureController(ConnectionController):
     
     def getRoomPresence(self, room):
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start: -30d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
-                |> group(columns: ["_measurement", "entity_id"])\
-                |> last(column: "_value")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["entity_id"] =~ /^{room}/)
+                    |> group(columns: ["_measurement", "entity_id"])
+                    |> last(column: "_value")
+                    |> yield(name: "mean")
+                '''
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
@@ -142,7 +150,7 @@ class MeasureController(ConnectionController):
                 return {"lx": 700, "dB": 90, "ppm": 1000}.get(measurement, None)
 
             def normalize_value(value, min_val, max_val):
-                return (value - min_val) / max_val if min_val is not None and max_val is not None else 0
+                return (value - min_val) / (max_val - min_val) if min_val is not None and max_val is not None else 0
 
             coefficients = {"lx": 10, "dB": 85, "ppm": 5}
 

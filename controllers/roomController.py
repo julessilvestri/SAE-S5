@@ -2,7 +2,7 @@
 # Create by Jules - 12/2023
 # -----=====|  |=====-----
 
-import influxdb_client
+import os
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Import controllers
@@ -29,11 +29,13 @@ class RoomController(ConnectionController):
         """
 
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-            |> range(start:-30d)\
-            |> filter(fn: (r) => r["_field"] == "value")\
-            |> distinct(column: "_measurement")\
-            |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> distinct(column: "_measurement")
+                    |> yield(name: "mean")
+                '''
 
             try:
                 rooms_data = self.query_api.query_data_frame(org=self.org, query=query)

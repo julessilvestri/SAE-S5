@@ -6,15 +6,14 @@
 from flask import Flask, jsonify, make_response, Response
 from flasgger import Swagger
 from flask_cors import CORS
-from datetime import datetime, timedelta
-import json, os, shutil, joblib
-import numpy as np
+import os, shutil
 
 # Import controllers
 from controllers.roomController import RoomController
 from controllers.sensorController import SensorController
 from controllers.measurementController import MeasurementController
 from controllers.measureController import MeasureController
+from controllers.iaController import IaController
 
 # Import files
 from helpers.exceptions import *
@@ -27,16 +26,16 @@ CORS(app)
 def getRooms():
     
   """
-    Get all rooms.
+    Récupérer toutes les salles.
 
-  ---
-  tags:
-    - GET
-  responses:
-    200:
-      description: Information for all rooms
-    500:
-      description: Internal server error
+    ---
+    tags:
+      - GET
+    responses:
+      200:
+        description: Informations concernant toutes les salles
+      500:
+        description: Erreur interne du serveur
   """
 
   try:
@@ -51,16 +50,16 @@ def getRooms():
 def getSensors():
 
   """
-  Get all sensors.
+    Récupérer tous les capteurs.
 
-  ---
-  tags:
-    - GET
-  responses:
-    200:
-      description: Information for all sensors
-    500:
-      description: Internal server error
+    ---
+    tags:
+      - GET
+    responses:
+      200:
+        description: Informations concernant toutes les capteurs
+      500:
+        description: Erreur interne du serveur
   """
 
   try:
@@ -75,22 +74,22 @@ def getSensors():
 def getSensor(name):
 
   """
-  Get sensor by name.
+    Récupérer un capteur par son nom.
 
-  ---
-  tags:
-    - GET
-  parameters:
-    - name: name
-      in: path
-      type: string
-      required: true
-      description: Name of the sensor
-  responses:
-    200:
-      description: Information for sensor
-    500:
-      description: Internal server error
+    ---
+    tags:
+      - GET
+    parameters:
+      - name: name
+        in: path
+        type: string
+        required: true
+        description: Nom du capteur
+    responses:
+      200:
+        description: Information du capteur
+      500:
+        description: Erreur interne du serveur
   """
 
   try:
@@ -106,7 +105,7 @@ def getSensor(name):
 def getSensorsByRoom(room):
 
   """
-  Get all sensors by room.
+  Récupérer tous les capteur d'une salle.
 
   ---
   tags:
@@ -116,12 +115,12 @@ def getSensorsByRoom(room):
       in: path
       type: string
       required: true
-      description: Name of the room
+      description: Nom de la salle
   responses:
     200:
-      description: Information for room
+      description: Information de la salle
     500:
-      description: Internal server error
+      description: Erreur interne du serveur
   """
 
   try:
@@ -137,16 +136,16 @@ def getSensorsByRoom(room):
 def getListMeasurements():
 
   """
-  Get all measurements.
+  Récupérer tous les mesurements.
 
   ---
   tags:
     - GET
   responses:
     200:
-      description: Information for measurements
+      description: Information de tous les mesurements
     500:
-      description: Internal server error
+      description: Erreur interne du serveur
   """
 
   try:
@@ -161,7 +160,7 @@ def getListMeasurements():
 def getMeasuresByRoomName(room):
 
   """
-  Get state of room.
+  Récupérer l'état de la salle.
 
   ---
   tags:
@@ -171,12 +170,12 @@ def getMeasuresByRoomName(room):
       in: path
       type: string
       required: true
-      description: Name of the room
+      description: NNom de la salle
   responses:
     200:
-      description: Room informations
+      description: Informations de la salle
     500:
-      description: Internal server error
+      description: Erreur interne du serveur
   """
 
   try:
@@ -191,7 +190,7 @@ def getMeasuresByRoomName(room):
 def getPresenceByRoomName(room):
 
   """
-  Get presence of room.
+  Récupérer les chances de présence d'une ou plusieurs personnes dans la salle.
 
   ---
   tags:
@@ -201,12 +200,12 @@ def getPresenceByRoomName(room):
       in: path
       type: string
       required: true
-      description: Name of the room
+      description: Name de la salle
   responses:
     200:
-      description: Presence informations
+      description:  Informations de présence
     500:
-      description: Internal server error
+      description: Erreur interne du serveur
   """
 
   try:
@@ -221,7 +220,7 @@ def getPresenceByRoomName(room):
 def getMeasuresByRoomAndMeasurement(room, measurement):
 
   """
-  Get measure of one measurement in room.
+  Récupérer la mesure d'un mesurement dans une salle.
 
   ---
   tags:
@@ -231,17 +230,17 @@ def getMeasuresByRoomAndMeasurement(room, measurement):
       in: path
       type: string
       required: true
-      description: Name of the room
+      description: Nom de la salle
     - name: measurement
       in: path
       type: string
       required: true
-      description: Name of the measurement
+      description: Nom du mesurement
   responses:
     200:
-      description: Room informations
+      description: Informations de la salle
     500:
-      description: Internal server error
+      description: Erreur interne du serveur 
   """
 
   try:
@@ -256,20 +255,18 @@ def getMeasuresByRoomAndMeasurement(room, measurement):
 def getRoomsSensorsList():
 
   """
-    Retrieve a list of sensors grouped by rooms.
-
-    This endpoint fetches a list of sensors grouped by rooms along with their respective measurements and recommendations.
+    Récupère la liste des capteurs disponible par salle.
 
     ---
     tags:
       - GET
     responses:
       200:
-        description: List of rooms with associated sensor data
+        description: Liste de toutes les salles avec leur capteur associés
       404:
-        description: No rooms found
+        description: Aucune salle trouvée
       500:
-        description: Internal server error
+        description: Erreur interne du serveur
   """
 
   try:
@@ -297,11 +294,11 @@ def getRoomsSensorsList():
   except Exception as e:
     return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-@app.route("/ia/<int:year>/<int:month>/<int:day>", methods=["GET"])
-def getIAData(year, month, day):
+@app.route("/predictTemperature/<int:year>/<int:month>/<int:day>", methods=["GET"])
+def getPredictTemperature(year, month, day):
 
   """
-    IA
+    Récupérer la prédiction de température générale générée par apprentissage.
 
     ---
     tags:
@@ -311,50 +308,30 @@ def getIAData(year, month, day):
         in: path
         type: integer
         required: true
-        description: Year
+        description: Année
       - name: month
         in: path
         type: integer
         required: true
-        description: Month
+        description: Mois
       - name: day
         in: path
         type: integer
         required: true
-        description: Day
+        description: Jours
     responses:
       200:
-        description: IA Datas
+        description: Température prédit en fonction de la date passée en paramètres
       404:
-        description: No rooms found
+        description: Aucune prediction trouvée
       500:
-        description: Internal server error
+        description: Erreur interne du serveur
   """
-  
-  loaded_model = joblib.load('model.pkl')
 
-  def normalizeInputModel(timestamp):
-    year = datetime.fromtimestamp(timestamp).year
-    start = datetime(year, 1, 1).timestamp()
-    end = datetime(year+1, 1, 1).timestamp()
-    return (timestamp-start)/(end-start)
-
-  def KelvinToCelsius(temperature):
-    return temperature - 273.15
-
-  input_timestamp = int(datetime(year, month, day).timestamp())
-  current_timestamp = int(datetime.now().timestamp())
-
-  inputs = np.array([
-      current_timestamp,
-      input_timestamp
-  ])
-
-  inputs = list(map(lambda input: [normalizeInputModel(input)], inputs))
-  results = loaded_model.predict(inputs)
-  results = list(map(lambda temperature: KelvinToCelsius(temperature[0]), results))
-
-  return jsonify(results)
+  try:
+    return jsonify(IaController().getPredictTemperature(year, month, day))
+  except Exception as e:
+    return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 def delete_pycache(root_dir):
 

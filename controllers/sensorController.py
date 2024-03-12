@@ -3,7 +3,7 @@
 # -----=====|  |=====-----
 
 # Import library
-import influxdb_client
+import os
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Import controllers
@@ -29,12 +29,14 @@ class SensorController(ConnectionController):
         """
 
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start:-30d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["domain"] == "sensor" or r["domain"] == "binary_sensor")\
-                |> distinct(column: "entity_id")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["domain"] == "sensor" or r["domain"] == "binary_sensor")
+                    |> distinct(column: "entity_id")
+                    |> yield(name: "mean")
+                '''
 
             try:
                 sensors = self.query_api.query_data_frame(org=self.org, query=query)
@@ -68,12 +70,14 @@ class SensorController(ConnectionController):
         """
 
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start:-30d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] =~/^' + name + '/)\
-                |> distinct(column: "entity_id")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["entity_id"] == "{name}")
+                    |> distinct(column: "entity_id")
+                    |> yield(name: "mean")
+                '''
             
             try:
                 sensors = self.query_api.query_data_frame(org=self.org, query=query)
@@ -105,12 +109,14 @@ class SensorController(ConnectionController):
             RuntimeError: Si une erreur se produit lors de la requête de données depuis InfluxDB.
         """
         try:
-            query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start:-30d)\
-                |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] =~ /^' + room + '/)\
-                |> distinct(column: "entity_id")\
-                |> yield(name: "mean")'
+            query = f'''
+                from(bucket: "{self.bucket}")
+                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
+                    |> filter(fn: (r) => r["_field"] == "value")
+                    |> filter(fn: (r) => r["entity_id"] =~ /^{room}/)
+                    |> distinct(column: "entity_id")
+                    |> yield(name: "mean")
+                '''
 
             try:
                 sensors = self.query_api.query_data_frame(org=self.org, query=query)
@@ -124,7 +130,7 @@ class SensorController(ConnectionController):
                 return data
             except Exception as e:
                 print(f"Erreur requête flux : {e}")
-                raise RuntimeError("Erreur lors de la requête des capteurs")
+                raise RuntimeError("Erreur lors de la requête")
         except Exception as e:
             print("Erreur connexion à InfluxDB")
             raise RuntimeError("Erreur de connexion à InfluxDB")

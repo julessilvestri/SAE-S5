@@ -6,7 +6,9 @@
 from flask import Flask, jsonify, make_response, Response
 from flasgger import Swagger
 from flask_cors import CORS
-import json, os, shutil
+from datetime import datetime, timedelta
+import json, os, shutil, joblib
+import numpy as np
 
 # Import controllers
 from controllers.roomController import RoomController
@@ -93,6 +95,7 @@ def getSensor(name):
 
   try:
     sensors = SensorController().getSensor(name)
+    print(sensors)
     if sensors :
       return jsonify([{"name": sensor.name, "measurement": sensor.measurement, "room": sensor.room} for sensor in sensors])
     return NotFoundException()
@@ -177,9 +180,39 @@ def getMeasuresByRoomName(room):
   """
 
   try:
-    measures = MeasureController().getMeasuresByRoomName(room)
+    measures = MeasureController().getRoomState(room)
     if measures:
       return jsonify([{"measurement": measure.measurement, "value" : measure.value, "recommendation" : measure.recommendation} for measure in measures])
+    return NotFoundException()
+  except Exception as e:
+    return InternalServerError(e)
+  
+@app.route("/rooms/<string:room>/presence", methods=["GET"])
+def getPresenceByRoomName(room):
+
+  """
+  Get presence of room.
+
+  ---
+  tags:
+    - GET
+  parameters:
+    - name: room
+      in: path
+      type: string
+      required: true
+      description: Name of the room
+  responses:
+    200:
+      description: Presence informations
+    500:
+      description: Internal server error
+  """
+
+  try:
+    presence = MeasureController().getRoomPresence(room)
+    if presence:
+      return jsonify([{"result": presence}])
     return NotFoundException()
   except Exception as e:
     return InternalServerError(e)
@@ -212,7 +245,7 @@ def getMeasuresByRoomAndMeasurement(room, measurement):
   """
 
   try:
-    measure = MeasureController().getMeasuresByRoomAndMeasurement(room, measurement)
+    measure = MeasureController().getMeasure(room, measurement)
     if measure :
       return jsonify({"measurement": measure.measurement, "value" : measure.value, "recommendation" : measure.recommendation})
     return NotFoundException()    
@@ -240,29 +273,69 @@ def getRoomsSensorsList():
   """
 
   try:
-      rooms = RoomController().getRooms()
-      if not rooms:
-          return jsonify({"error": "Rooms not found"}), 404
+    rooms = RoomController().getRooms()
+    if not rooms:
+        return jsonify({"error": "Rooms not found"}), 404
 
-      rooms_sensors = []
-      for room in rooms:
-          measures_data = MeasureController().getMeasuresByRoomName(room.name)
-          measures_data_dicts = [{
-              "value": measure.value,
-              "measurement": measure.measurement,
-              "time" : measure.time
-          } for measure in measures_data] if measures_data else "measures data not found"
+    rooms_sensors = []
+    for room in rooms:
+        sensors_data = MeasureController().getMeasuresByRoomName(room.name)
+        sensors_data_dicts = [{
+            "value": sensor.value,
+             "measurement": sensor.measurement,
+             "recommendation": sensor.recommendation
+        } for sensor in sensors_data] if sensors_data else "Sensors data not found"
 
-          room_info = {
-              "name": room.name,
-              "locate": room.locate,
-              "measures": measures_data_dicts
-          }
-          rooms_sensors.append(room_info)
+        room_info = {
+            "name": room.name,
+            "locate": room.locate,
+            "sensors": sensors_data_dicts
+        }
+        rooms_sensors.append(room_info)
 
-      return jsonify(rooms_sensors), 200
+    return jsonify(rooms_sensors), 200
   except Exception as e:
-      return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+@app.route("/ia", methods=["GET"])
+def getIAData():
+
+  """
+    IA
+
+    ---
+    tags:
+      - GET
+    responses:
+      200:
+        description: IA Datas
+      404:
+        description: No rooms found
+      500:
+        description: Internal server error
+  """
+  
+  loaded_model = joblib.load('model.pkl')
+
+  def normalizeInputModel(timestamp):
+    year = datetime.fromtimestamp(timestamp).year
+    start = datetime(year, 1, 1).timestamp()
+    end = datetime(year+1, 1, 1).timestamp()
+    return (timestamp-start)/(end-start)
+
+  def KelvinToCelsius(temperature):
+    return temperature - 273.15
+
+  inputs = np.array([
+      int(datetime.now().timestamp()),
+      int(datetime(2024,2,2).timestamp())
+  ])
+
+  inputs = list(map(lambda input: [normalizeInputModel(input)], inputs))
+  results = loaded_model.predict(inputs)
+  results = list(map(lambda temperature: KelvinToCelsius(temperature[0]),results))
+
+  return jsonify(results)
 
 def delete_pycache(root_dir):
 

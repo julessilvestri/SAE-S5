@@ -1,7 +1,3 @@
-# -----=====|  |=====-----
-# Create by Jules - 12/2023
-# -----=====|  |=====-----
-
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
 
@@ -21,21 +17,7 @@ class MeasureController(ConnectionController):
         "default": "Aucune message disponible pour ce capteur"
     }
 
-    def getMeasuresByRoomName(self, room):
-        """
-            Récupère l'état d'une pièce spécifique depuis InfluxDB pour les 48 dernières heures.
-
-            Args:
-                self (object): Instance de la classe.
-                room (str): Nom de la pièce à interroger dans InfluxDB.
-
-            Returns:
-                list: Une liste d'objets Measure représentant les valeurs moyennes des mesures de la pièce spécifiée.
-
-            Raises:
-                Exception: Si une erreur inattendue se produit lors de la récupération des données.
-        """
-
+    def getRoomState(self, room):
         try:
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start: -2d)\
@@ -47,7 +29,65 @@ class MeasureController(ConnectionController):
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
-            print(roomData)
+            average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
+            data = []
+
+            for i in range(len(average_data['_measurement'])):
+
+                measurment = average_data['_measurement'][i]
+                value = average_data['_value'][i]
+
+                if measurment in self.RECOMMENDATIONS:
+                    recommendation = self.RECOMMENDATIONS[measurment](value)
+                else:
+                    recommendation = self.RECOMMENDATIONS["default"]
+
+                data.append(Measure(value, measurment, recommendation))
+
+            return data
+        
+        except Exception as e:
+            print("An unexpected error occurred:", e)
+    
+    def getMeasure(self, room, sensor):
+        try:
+            query = 'from(bucket: "' + self.bucket +'")\
+                |> range(start: -2d)\
+                |> filter(fn: (r) => r["_field"] == "value")\
+                |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
+                |> filter(fn: (r) => r["_measurement"] =~/^' + sensor + '/)\
+                |> group(columns: ["_measurement", "entity_id"])\
+                |> last(column: "_value")\
+                |> yield(name: "mean")'
+            
+            roomData = self.query_api.query_data_frame(org=self.org, query=query)
+
+            average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
+
+            for i in range(len(average_data['_measurement'])):
+                measurment = average_data['_measurement'][i]
+                value = average_data['_value'][i]
+
+                if measurment in self.RECOMMENDATIONS:
+                    recommendation = self.RECOMMENDATIONS[measurment](value)
+                else:
+                    recommendation = self.RECOMMENDATIONS["default"]
+            return Measure(value, measurment, recommendation)
+        
+        except Exception as e:
+            print("An unexpected error occurred:", e)
+
+    def getMeasuresByRoomName(self, room):
+        try:
+            query = 'from(bucket: "' + self.bucket +'")\
+                |> range(start: -2d)\
+                |> filter(fn: (r) => r["_field"] == "value")\
+                |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
+                |> group(columns: ["_measurement", "entity_id"])\
+                |> last(column: "_value")\
+                |> yield(name: "mean")'
+            
+            roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
             average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
             data = []
@@ -56,46 +96,25 @@ class MeasureController(ConnectionController):
 
                 measurement = average_data['_measurement'][i]
                 value = average_data['_value'][i]
-                time = average_data['_time'][i]
-
-                # print("===================")
-                # print(time)
-                # print("===================")
 
                 if measurement in self.RECOMMENDATIONS:
                     recommendation = self.RECOMMENDATIONS[measurement](value)
                 else:
                     recommendation = self.RECOMMENDATIONS["default"]
 
-                data.append(Measure(value, measurement, recommendation, time))
+                data.append(Measure(value, measurement, recommendation))
                 
             return data
         
         except Exception as e:
             print("An unexpected error occurred:", e)
     
-    def getMeasuresByRoomAndMeasurement(self, room, measurement):
-        """
-            Récupère la dernière mesure d'un capteur spécifique dans une pièce donnée depuis InfluxDB pour les 48 dernières heures.
-
-            Args:
-                self (object): Instance de la classe.
-                room (str): Nom de la pièce à interroger dans la base de données.
-                sensor (str): Nom du capteur à interroger dans la base de données.
-
-            Returns:
-                Measure: Un objet Measure représentant la dernière mesure du capteur spécifié dans la pièce donnée.
-
-            Raises:
-                Exception: Si une erreur inattendue se produit lors de la récupération des données.
-        """
-
+    def getRoomPresence(self, room):
         try:
             query = 'from(bucket: "' + self.bucket +'")\
-                |> range(start: -2d)\
+                |> range(start: -30d)\
                 |> filter(fn: (r) => r["_field"] == "value")\
                 |> filter(fn: (r) => r["entity_id"] =~/^' + room + '/)\
-                |> filter(fn: (r) => r["_measurement"] =~/^' + measurement + '/)\
                 |> group(columns: ["_measurement", "entity_id"])\
                 |> last(column: "_value")\
                 |> yield(name: "mean")'
@@ -103,17 +122,36 @@ class MeasureController(ConnectionController):
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
 
             average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
+            data = []
 
             for i in range(len(average_data['_measurement'])):
-                measurement = average_data['_measurement'][i]
+                measurment = average_data['_measurement'][i]
                 value = average_data['_value'][i]
 
-                if measurement in self.RECOMMENDATIONS:
-                    recommendation = self.RECOMMENDATIONS[measurement](value)
+                if measurment in self.RECOMMENDATIONS:
+                    recommendation = self.RECOMMENDATIONS[measurment](value)
                 else:
                     recommendation = self.RECOMMENDATIONS["default"]
 
-            return Measure(value, measurement, recommendation)
+                data.append(Measure(value, measurment, recommendation))
+            
+            def intervale_min(measurement):
+                return {"lx": 0, "dB": 20, "ppm": 10}.get(measurement, None)    
+
+            def intervale_max(measurement):
+                return {"lx": 700, "dB": 90, "ppm": 1000}.get(measurement, None)
+
+            def normalize_value(value, min_val, max_val):
+                return (value - min_val) / max_val if min_val is not None and max_val is not None else 0
+
+            coefficients = {"lx": 10, "dB": 85, "ppm": 5}
+
+            norm_values = {mesure.measurement: normalize_value(mesure.value, intervale_min(mesure.measurement), intervale_max(mesure.measurement)) * coefficients.get(mesure.measurement, 0) for mesure in data if mesure.measurement in ["lx", "dB", "ppm"]}
+
+            presence_percentage = sum(norm_values.values())
+
+            return f"{round(presence_percentage, 0)}% de chance de présence dans la salle"
         
         except Exception as e:
-            print("An unexpected error occurred:", e)
+            print("An unexpected error occurred:", e)   
+

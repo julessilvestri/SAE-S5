@@ -71,7 +71,7 @@ class SensorController(ConnectionController):
             query = 'from(bucket: "' + self.bucket +'")\
                 |> range(start:-30d)\
                 |> filter(fn: (r) => r["_field"] == "value")\
-                |> filter(fn: (r) => r["entity_id"] == "' + name + '")\
+                |> filter(fn: (r) => r["entity_id"] =~/^' + name + '/)\
                 |> distinct(column: "entity_id")\
                 |> yield(name: "mean")'
             

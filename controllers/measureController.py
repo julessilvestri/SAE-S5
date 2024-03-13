@@ -85,23 +85,19 @@ class MeasureController(ConnectionController):
         try:
             query = f'''
                 from(bucket: "{self.bucket}")
-                    |> range(start: {os.getenv("INFLUX_REQUEST_DAY_RANGE")}d)
-                    |> filter(fn: (r) => r["_field"] == "value")
-                    |> filter(fn: (r) => r["entity_id"] =~/^{room}/)
-                    |> group(columns: ["_measurement", "entity_id"])
-                    |> last(column: "_value")
+                    |> range(start: -2d)
+                    |> filter(fn: (r) => r["_field"] == "value" and r["entity_id"] =~/^{room}/)
+                    |> filter(fn: (r) => r["domain"] == "sensor")
+                    |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
                     |> yield(name: "mean")
                 '''
             
             roomData = self.query_api.query_data_frame(org=self.org, query=query)
-
-            average_data = roomData.groupby('_measurement')['_value'].mean().reset_index()
             data = []
 
-            for i in range(len(average_data['_measurement'])):
-
-                measurement = average_data['_measurement'][i]
-                value = average_data['_value'][i]
+            for i in range(len(roomData)):
+                measurement = roomData.iloc[i]['_measurement']
+                value = roomData.iloc[i]['_value']
                 time = roomData.iloc[i]['_time']
 
                 if measurement in self.RECOMMENDATIONS:
@@ -110,7 +106,7 @@ class MeasureController(ConnectionController):
                     recommendation = self.RECOMMENDATIONS["default"]
 
                 data.append(Measure(value, measurement, recommendation, time))
-                
+                    
             return data
         
         except Exception as e:
@@ -175,5 +171,4 @@ class MeasureController(ConnectionController):
             return {"result" : f"{round(presence_percentage, 0)}% de chance de présence dans la salle", "label": presence_label}
         
         except Exception as e:
-            print("An unexpected error occurred:", e)   
-
+            print("An unexpected error occurred:", e)

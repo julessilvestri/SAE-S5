@@ -170,7 +170,7 @@ def getMeasuresByRoomName(room):
       in: path
       type: string
       required: true
-      description: NNom de la salle
+      description: Nom de la salle
   responses:
     200:
       description: Informations de la salle
